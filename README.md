@@ -1,11 +1,11 @@
 # 🚀 Getting Started
 ## 0️⃣ 사전 요구사항
 
-- Docker Desktop 설치
-- NVIDIA GPU + 드라이버 설치
-- WSL2 기반 Docker 환경
-- .env 파일 생성 완료
-
+- Ollama (local GPU inference)
+- LiteLLM (OpenAI-compatible gateway)
+- OpenClaw (sandboxed automation agent)
+- RTX 4090 optimized
+All services run in isolated Docker containers with internal networking.
 ---
 ## 1️⃣ 공용 Docker 네트워크 생성 (최초 1회)
 
@@ -102,3 +102,168 @@ RTX 4090 GPU
 - LiteLLM은 OpenAI compatible API 제공
 - Ollama는 로컬 GPU에서 모델 실행
 - Claude API는 필요 시 LiteLLM을 통해 fallback 가능
+
+
+
+--------------------------------------------
+🦞 OpenClaw + Ollama Local LLM Stack
+
+A fully containerized local LLM stack using:
+
+Ollama (local GPU inference)
+
+LiteLLM (OpenAI-compatible gateway)
+
+OpenClaw (sandboxed automation agent)
+
+RTX 4090 optimized
+
+All services run in isolated Docker containers with internal networking.
+
+🏗 Architecture Overview
+OpenClaw (sandbox container)
+        │
+        ▼
+LiteLLM (OpenAI-compatible gateway)
+        │
+        ▼
+Ollama (local LLM runtime)
+        │
+        ▼
+RTX 4090 GPU
+
+No external API usage required
+
+Fully local inference
+
+OpenAI-compatible endpoint
+
+Service-level isolation
+
+📦 Project Structure
+.
+├── compose.gateway.yml
+├── compose.openclaw.yml
+├── litellm/
+│   └── config.yaml
+├── openclaw/
+│   └── Dockerfile
+├── .env.example
+└── README.md
+🚀 Quick Start
+1️⃣ Clone repository
+git clone <your-repo-url>
+cd OpenClawEnv
+2️⃣ Create environment file
+cp .env.example .env
+
+Edit .env:
+
+LITELLM_MASTER_KEY=sk-your-random-long-string
+OPENAI_API_KEY=sk-your-random-long-string
+ANTHROPIC_API_KEY=
+
+Generate a secure key:
+
+openssl rand -hex 32
+3️⃣ Create shared Docker network (first time only)
+docker network create llm-backend || true
+4️⃣ Start Gateway (Ollama + LiteLLM)
+docker compose -f compose.gateway.yml up -d
+
+Check status:
+
+docker compose -f compose.gateway.yml ps
+5️⃣ Pull LLM Model
+docker exec -it ollama ollama pull qwen2.5:32b
+docker exec -it ollama ollama list
+6️⃣ Verify OpenAI-Compatible Endpoint
+
+Temporarily expose LiteLLM port (if not already enabled):
+
+ports:
+  - "127.0.0.1:4000:4000"
+
+Test:
+
+curl http://127.0.0.1:4000/v1/models \
+  -H "Authorization: Bearer <YOUR_KEY>"
+
+You should see:
+
+local-qwen32
+7️⃣ Start OpenClaw
+docker compose -f compose.openclaw.yml up -d --build
+
+Check logs:
+
+docker logs -f openclaw
+🔐 Security Design
+
+OpenClaw runs as non-root
+
+Read-only filesystem
+
+cap_drop: ALL
+
+no-new-privileges
+
+Writable path limited to /data
+
+Internal Docker network only
+
+LiteLLM protected by master key
+
+🧨 Full Reset
+docker compose -f compose.openclaw.yml down -v
+docker compose -f compose.gateway.yml down -v
+docker network rm llm-backend
+🧠 Model Configuration
+
+Registered models (LiteLLM):
+
+local-qwen32   -> Ollama qwen2.5:32b
+claude-sonnet  -> (optional external API)
+
+To use local only, ensure OpenClaw uses:
+
+model = local-qwen32
+⚡ GPU Optimization (RTX 4090)
+
+Optional tuning inside compose.gateway.yml:
+
+environment:
+  - OLLAMA_NUM_GPU=1
+  - OLLAMA_GPU_LAYERS=999
+📊 Monitoring
+
+Check model activity:
+
+docker logs -f ollama
+
+Check gateway:
+
+docker logs -f litellm
+🎯 Goals of This Setup
+
+Fully local AI agent execution
+
+OpenAI-compatible API abstraction
+
+Safe agent sandboxing
+
+Production-style architecture
+
+Easily extensible to Claude/OpenAI fallback
+
+If you want to extend:
+
+Add fallback routing
+
+Add logging/metrics
+
+Add rate limiting
+
+Deploy to LAN
+
+Use virtual keys per agent

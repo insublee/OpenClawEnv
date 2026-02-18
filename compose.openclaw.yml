@@ -1,17 +1,17 @@
 services:
   openclaw:
-    # TODO: 네 OpenClaw 이미지/빌드로 교체
-    # image: your-openclaw-image:latest
-    # 또는
-    # build: ./openclaw
+    build: ./openclaw
     container_name: openclaw
     restart: unless-stopped
-
     environment:
+      # OpenAI compatible gateway (LiteLLM)
       - OPENAI_BASE_URL=http://litellm:4000/v1
       - OPENAI_API_KEY=${OPENAI_API_KEY}
 
-    # ✅ 샌드박스 하드닝(추천 기본)
+      # (권장) OpenClaw가 모델명을 env로 받는다면 여기서 고정
+      # - OPENAI_MODEL=local-qwen32
+
+    # ✅ 샌드박스 하드닝
     read_only: true
     tmpfs:
       - /tmp
@@ -19,11 +19,10 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
-
     volumes:
       - openclaw-data:/data
-
-    networks: [llm-backend]
+    networks:
+      - llm-backend
 
 networks:
   llm-backend:
