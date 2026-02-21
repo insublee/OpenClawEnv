@@ -29,6 +29,10 @@ services:
       - OPENCLAW_STATE_DIR=/data/.openclaw
       - OPENCLAW_CONFIG_PATH=/data/.openclaw/config.yaml
       - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - NOTION_API_KEY=${NOTION_API_KEY}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
     tmpfs: ["/tmp"]
     volumes:
       - openclaw-data:/data
