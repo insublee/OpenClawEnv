@@ -5,10 +5,12 @@ general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
 
 model_list:
-  - model_name: local-qwen32
+  - model_name: local-qwen
     litellm_params:
-      model: ollama/qwen2.5:32b
-      api_base: http://ollama:11434
+      # LiteLLM에서 OpenAI-compatible provider로 라우팅하는 공식 패턴
+      model: openai/default
+      api_base: http://sglang:30000/v1
+      api_key: "EMPTY"
 
   # - model_name: claude-sonnet
   #   litellm_params:

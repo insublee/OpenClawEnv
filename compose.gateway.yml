@@ -1,25 +1,37 @@
 services:
-  ollama:
-    image: ollama/ollama:latest
-    container_name: ollama
+  sglang:
+    image: lmsysorg/sglang:v0.4.8.post1-cu126
+    container_name: sglang
     restart: unless-stopped
     gpus: all
     volumes:
-      - ollama:/root/.ollama
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
+      # 모델 캐시 (HuggingFace)
+      - hf-cache:/root/.cache/huggingface
+      # (선택) 로컬에 이미 다운받은 모델 디렉토리 마운트하고 싶으면:
+      # - ./models:/models:ro
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
-    # (선택) 호스트에서 ollama api 쓰고 싶으면
-    # ports:
-    #   - "127.0.0.1:11434:11434"
+      # (선택) HF 토큰 필요하면
+      # - HF_TOKEN=${HF_TOKEN}
+    command:
+      - python3
+      - -m
+      - sglang.launch_server
+      - --host
+      - 0.0.0.0
+      - --port
+      - "30000"
+      # ✅ 여기 모델만 너가 쓰는 걸로 교체
+      - --model-path
+      - Qwen/Qwen2.5-14B-Instruct
+      # (선택) 텐서 병렬. 4090 1장이라면 보통 1
+      # - --tp
+      # - "1"
     networks: [llm-backend]
+    # (선택) 호스트에서 직접 SGLang API 테스트하고 싶을 때만 오픈
+    # ports:
+    #   - "127.0.0.1:30000:30000"
 
   litellm:
     image: ghcr.io/berriai/litellm:main-latest
@@ -33,12 +45,8 @@ services:
     command: ["--config", "/app/config.yaml"]
     volumes:
       - ./litellm/config.yaml:/app/config.yaml:ro
-    # ✅ OpenClaw만 붙을 거면 호스트에 포트 열 필요 없음
-    # 디버깅 때만 임시로 열어도 됨:
-    # ports:
-    #   - "127.0.0.1:4000:4000"
     depends_on:
-      - ollama
+      - sglang
     networks: [llm-backend]
 
 networks:
@@ -46,4 +54,4 @@ networks:
     external: true
 
 volumes:
-  ollama:
+  hf-cache:
