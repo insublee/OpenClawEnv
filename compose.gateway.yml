@@ -1,19 +1,14 @@
 services:
   sglang:
-    image: lmsysorg/sglang:v0.4.8.post1-cu126
+    build:
+      context: .
+      dockerfile: sglang/Dockerfile
+    image: sglang-cu126-vllmops:local
     container_name: sglang
     restart: unless-stopped
     gpus: all
     volumes:
-      # 모델 캐시 (HuggingFace)
       - hf-cache:/root/.cache/huggingface
-      # (선택) 로컬에 이미 다운받은 모델 디렉토리 마운트하고 싶으면:
-      # - ./models:/models:ro
-    environment:
-      - NVIDIA_VISIBLE_DEVICES=all
-      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
-      # (선택) HF 토큰 필요하면
-      # - HF_TOKEN=${HF_TOKEN}
     command:
       - python3
       - -m
@@ -22,12 +17,20 @@ services:
       - 0.0.0.0
       - --port
       - "30000"
-      # ✅ 여기 모델만 너가 쓰는 걸로 교체
       - --model-path
-      - Qwen/Qwen2.5-14B-Instruct
-      # (선택) 텐서 병렬. 4090 1장이라면 보통 1
-      # - --tp
-      # - "1"
+      - Qwen/Qwen2.5-14B-Instruct-GPTQ-Int4
+      - --quantization
+      - gptq
+      # 안정적으로 먼저 띄우자 (너무 욕심내면 또 VRAM 터짐)
+      - --trust-remote-code
+      - --dtype
+      - float16
+      - --context-length
+      - "32768"
+      - --max-prefill-tokens
+      - "16384"
+      - --tool-call-parser
+      - qwen25
     networks: [llm-backend]
     # (선택) 호스트에서 직접 SGLang API 테스트하고 싶을 때만 오픈
     # ports:

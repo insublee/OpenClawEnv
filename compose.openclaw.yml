@@ -17,6 +17,7 @@ services:
     cap_drop: ["ALL"]
     volumes:
       - openclaw-data:/data
+      - ./openclaw/openclaw-config.json:/data/.openclaw/openclaw.json:ro
     networks: [llm-backend]
     # 디버깅 필요하면 잠깐만 열기
     # ports:
