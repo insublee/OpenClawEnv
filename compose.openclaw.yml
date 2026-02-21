@@ -3,7 +3,7 @@ services:
     build: ./openclaw
     container_name: openclaw-gateway
     restart: unless-stopped
-    command: ["gateway", "--bind", "loopback", "--port", "18789", "--allow-unconfigured"]
+    command: ["gateway", "--bind", "lan", "--port", "18789", "--allow-unconfigured"]
     environment:
       - OPENCLAW_HOME=/data/.openclaw
       - OPENCLAW_STATE_DIR=/data/.openclaw
@@ -19,9 +19,9 @@ services:
       - openclaw-data:/data
       - ./openclaw/openclaw-config.json:/data/.openclaw/openclaw.json:ro
     networks: [llm-backend]
-    # 디버깅 필요하면 잠깐만 열기
-    # ports:
-    #   - "127.0.0.1:18789:18789"
+    # 디버깅 및 대시보드 접속을 위해 열어둠
+    ports:
+      - "18789:18789"
 
 networks:
   llm-backend:
