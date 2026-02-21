@@ -5,10 +5,10 @@ general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
 
 model_list:
-  - model_name: local-qwen
+  - model_name: local-llama3.1
     litellm_params:
       # LiteLLM에서 OpenAI-compatible provider로 라우팅하는 공식 패턴
-      model: openai/Qwen/Qwen2.5-14B-Instruct-GPTQ-Int4
+      model: openai/hugging-quants/Meta-Llama-3.1-8B-Instruct-AWQ-INT4
       api_base: http://sglang:30000/v1
       api_key: "EMPTY"
 
