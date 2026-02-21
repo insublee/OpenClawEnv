@@ -5,7 +5,7 @@ services:
     restart: unless-stopped
     command: ["gateway", "--bind", "lan", "--port", "18789", "--allow-unconfigured"]
     environment:
-      - OPENCLAW_HOME=/data/.openclaw
+      - OPENCLAW_HOME=/data
       - OPENCLAW_STATE_DIR=/data/.openclaw
       - OPENCLAW_CONFIG_PATH=/data/.openclaw/config.yaml
       - OPENAI_BASE_URL=http://litellm:4000/v1

@@ -18,7 +18,9 @@ services:
       - --port
       - "30000"
       - --model-path
-      - hugging-quants/Meta-Llama-3.1-8B-Instruct-AWQ-INT4
+      - Qwen/Qwen2.5-14B-Instruct-GPTQ-Int4
+      - --quantization
+      - gptq
       # 안정적으로 먼저 띄우자 (너무 욕심내면 또 VRAM 터짐)
       - --dtype
       - float16
@@ -29,7 +31,7 @@ services:
       - --chunked-prefill-size
       - "8192"
       - --tool-call-parser
-      - llama3
+      - qwen25
     networks: [llm-backend]
     # (선택) 호스트에서 직접 SGLang API 테스트하고 싶을 때만 오픈
     # ports:

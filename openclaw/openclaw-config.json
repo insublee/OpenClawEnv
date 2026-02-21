@@ -10,7 +10,7 @@
                     {
                         "id": "local-qwen",
                         "name": "Qwen2.5-14B (Local SGLang)",
-                        "contextWindow": 8192,
+                        "contextWindow": 16384,
                         "maxTokens": 4096,
                         "input": [
                             "text"

@@ -13,7 +13,7 @@ LiteLLM (OpenAI 호환 게이트웨이 / 프록시)
         ▼
 SGLang (초고속 vLLM 호환 백엔드)
         │  ↳ --tool-call-parser qwen25
-        │  ↳ --context-length 32768
+        │  ↳ --context-length 16384
         ▼
 RTX 4090 GPU (Qwen2.5-14B-GPTQ-Int4 모델)
 ```
@@ -62,10 +62,10 @@ docker compose -f compose.openclaw.yml up -d
 
 OpenClaw가 LiteLLM(SGLang) 모델을 기본 에이전트 모델로 인식하도록 설정해야 합니다. (이 작업은 CLI Setup 마법사를 자동화한 것입니다.)
 
-**LiteLLM 프로바이더 및 32k 컨텍스트 윈도우 등록:**
+**LiteLLM 프로바이더 및 16k 컨텍스트 윈도우 등록:**
 ```bash
 docker exec openclaw-gateway openclaw config set models.providers.litellm \
-  '{"api":"openai-completions","baseUrl":"http://litellm:4000","models":[{"id":"local-qwen","name":"Qwen2.5-14B (Local SGLang)","contextWindow":32768,"maxTokens":8192,"input":["text"],"reasoning":false}]}' --json
+  '{"api":"openai-completions","baseUrl":"http://litellm:4000","models":[{"id":"local-qwen","name":"Qwen2.5-14B (Local SGLang)","contextWindow":16384,"maxTokens":4096,"input":["text"],"reasoning":false}]}' --json
 ```
 
 **기본 모델로 지정:**
