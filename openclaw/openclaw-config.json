@@ -1,0 +1,34 @@
+{
+    "models": {
+        "providers": {
+            "litellm": {
+                "displayName": "LiteLLM Local",
+                "api": "openai-completions",
+                "baseUrl": "http://litellm:4000",
+                "apiKey": "${LITELLM_API_KEY}",
+                "models": [
+                    {
+                        "id": "local-qwen",
+                        "name": "Qwen2.5-14B (Local SGLang)",
+                        "contextWindow": 8192,
+                        "maxTokens": 4096,
+                        "input": [
+                            "text"
+                        ],
+                        "reasoning": false
+                    }
+                ]
+            }
+        }
+    },
+    "agents": {
+        "defaults": {
+            "model": {
+                "primary": "litellm/local-qwen"
+            },
+            "models": {
+                "litellm/local-qwen": {}
+            }
+        }
+    }
+}
