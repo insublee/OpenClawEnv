@@ -1,0 +1,24 @@
+services:
+  openclaw-gateway:
+    build: ./openclaw
+    container_name: openclaw-gateway
+    restart: unless-stopped
+    command: ["gateway", "--bind", "lan", "--port", "18789", "--allow-unconfigured"]
+    environment:
+      - OPENCLAW_HOME=/data
+      - OPENCLAW_STATE_DIR=/data/.openclaw
+      - OPENCLAW_CONFIG_PATH=/data/.openclaw/config.yaml
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    read_only: true
+    tmpfs: ["/tmp"]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: ["ALL"]
+    volumes:
+      - openclaw-data:/data
+      - ./openclaw/openclaw-config.json:/data/.openclaw/openclaw.json:ro
+    # 대시보드 및 텔레그램 봇 접속
+    ports:
+      - "18789:18789"
+
+volumes:
+  openclaw-data:

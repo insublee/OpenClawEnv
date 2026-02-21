@@ -1,33 +1,20 @@
 {
     "models": {
         "providers": {
-            "litellm": {
-                "displayName": "LiteLLM Local",
-                "api": "openai-completions",
-                "baseUrl": "http://litellm:4000",
-                "apiKey": "${LITELLM_API_KEY}",
-                "models": [
-                    {
-                        "id": "local-qwen",
-                        "name": "Qwen2.5-14B (Local SGLang)",
-                        "contextWindow": 16384,
-                        "maxTokens": 4096,
-                        "input": [
-                            "text"
-                        ],
-                        "reasoning": false
-                    }
-                ]
+            "google": {
+                "displayName": "Google Gemini",
+                "api": "google-genai",
+                "apiKey": "${GEMINI_API_KEY}"
             }
         }
     },
     "agents": {
         "defaults": {
             "model": {
-                "primary": "litellm/local-qwen"
+                "primary": "google/gemini-3-flash-preview"
             },
             "models": {
-                "litellm/local-qwen": {}
+                "google/gemini-3-flash-preview": {}
             }
         }
     }
