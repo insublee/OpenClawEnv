@@ -1,8 +1,0 @@
-services:
-  openclaw-gateway:
-    ports:
-      - "127.0.0.1:18789:18789"
-    environment:
-      - OPENAI_BASE_URL=http://litellm:4000/v1
-      - OPENAI_API_KEY=${LITELLM_MASTER_KEY}
-    command: ["gateway", "--bind", "loopback", "--port", "18789", "--allow-unconfigured"]
