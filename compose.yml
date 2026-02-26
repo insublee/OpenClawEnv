@@ -50,12 +50,11 @@ services:
         max-size: "50m"
         max-file: "3"
 
-  # ── 서버 전용: 이미지 자동 업데이트 ──
+  # 이미지 자동 업데이트 (매일 새벽 4시)
   watchtower:
     image: containrrr/watchtower
     container_name: openclaw-watchtower
     restart: unless-stopped
-    profiles: ["server"]
     environment:
       - WATCHTOWER_CLEANUP=true
       - WATCHTOWER_POLL_INTERVAL=86400

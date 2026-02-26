@@ -8,24 +8,12 @@ ok()    { echo -e "${GREEN}[OK]${NC} $*"; }
 warn()  { echo -e "${YELLOW}[WARN]${NC} $*"; }
 err()   { echo -e "${RED}[ERROR]${NC} $*" >&2; }
 
-# ── 플래그 파싱 ──
-MODE="wsl"
-for arg in "$@"; do
-  case "$arg" in
-    --server) MODE="server" ;;
-    --help|-h)
-      echo "사용법: ./setup.sh [--server]"
-      echo ""
-      echo "  (기본)     WSL 환경에서 OpenClaw 실행"
-      echo "  --server   Ubuntu 서버 환경 (Docker 설치 + Watchtower 포함)"
-      exit 0
-      ;;
-  esac
-done
+echo ""
+echo "🦞 OpenClaw 서버 설치 스크립트"
+echo "=============================="
+echo ""
 
-info "모드: ${MODE}"
-
-# ── Docker 설치 확인/설치 ──
+# ── Docker 설치 ──
 install_docker() {
   if command -v docker &>/dev/null; then
     ok "Docker가 이미 설치되어 있습니다: $(docker --version)"
@@ -54,7 +42,7 @@ install_docker() {
   ok "Docker 설치 완료"
 }
 
-# ── Docker 로그 rotation 설정 ──
+# ── Docker 로그 rotation ──
 configure_log_rotation() {
   local daemon_json="/etc/docker/daemon.json"
   if [ -f "$daemon_json" ] && grep -q "max-size" "$daemon_json" 2>/dev/null; then
@@ -85,7 +73,6 @@ check_env() {
     exit 1
   fi
 
-  # GEMINI_API_KEY가 비어있는지 확인
   if grep -qE '^GEMINI_API_KEY=$' .env 2>/dev/null; then
     err "GEMINI_API_KEY가 설정되지 않았습니다. .env 파일을 편집해주세요."
     exit 1
@@ -95,45 +82,23 @@ check_env() {
 }
 
 # ── 메인 ──
-main() {
-  echo ""
-  echo "🦞 OpenClaw 설치 스크립트"
-  echo "========================="
-  echo ""
+install_docker
+configure_log_rotation
 
-  # 서버 모드: Docker 설치 + 로그 rotation
-  if [ "$MODE" = "server" ]; then
-    install_docker
-    configure_log_rotation
+# newgrp 없이 docker 사용 가능하도록 확인
+if ! docker info &>/dev/null; then
+  warn "Docker 그룹 변경 적용을 위해 로그아웃 후 다시 실행해주세요."
+  warn "또는: newgrp docker && ./setup.sh"
+  exit 1
+fi
 
-    # newgrp 없이 docker 사용 가능하도록 소켓 권한 확인
-    if ! docker info &>/dev/null; then
-      warn "Docker 그룹 변경 적용을 위해 로그아웃 후 다시 실행해주세요."
-      warn "또는: newgrp docker && ./setup.sh --server"
-      exit 1
-    fi
-  fi
+check_env
 
-  check_env
+info "OpenClaw 컨테이너 빌드 및 시작 중..."
+docker compose up -d --build
 
-  info "OpenClaw 컨테이너 빌드 및 시작 중..."
-
-  if [ "$MODE" = "server" ]; then
-    docker compose --profile server up -d --build
-  else
-    docker compose up -d --build
-  fi
-
-  echo ""
-  ok "🦞 OpenClaw가 시작되었습니다!"
-  echo ""
-  info "게이트웨이 로그 확인:"
-  echo "  docker logs -f openclaw-gateway"
-  echo ""
-
-  if [ "$MODE" = "server" ]; then
-    info "Watchtower가 매일 새벽 4시에 업데이트를 확인합니다."
-  fi
-}
-
-main
+echo ""
+ok "🦞 OpenClaw가 시작되었습니다!"
+echo ""
+info "게이트웨이 로그 확인: docker logs -f openclaw-gateway"
+info "Watchtower가 매일 새벽 4시에 업데이트를 확인합니다."
