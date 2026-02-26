@@ -19,7 +19,7 @@ services:
         cp /seed/openclaw.json /data/.openclaw/openclaw.json
 
         # 2. config.yaml 자동 생성 (최신 스키마 준수)
-        echo '{
+        printf '{
           "auth": {
             "profiles": {
               "google:default": {
@@ -38,7 +38,7 @@ services:
           "channels": {
             "telegram": {
               "enabled": true,
-              "botToken": "${TELEGRAM_BOT_TOKEN}",
+              "botToken": "%s",
               "dmPolicy": "pairing",
               "groups": { "*": { "requireMention": true } }
             }
@@ -48,21 +48,20 @@ services:
               "dangerouslyAllowHostHeaderOriginFallback": true
             }
           }
-        }' > /data/.openclaw/config.yaml
+        }' "$${TELEGRAM_BOT_TOKEN}" > /data/.openclaw/config.yaml
 
         # 3. 메모리 레포 동기화 (Insub-Bot-Memory)
-        # 토큰이 있으면 인증된 URL 사용
-        SYNC_URL="${MEMORY_REPO_URL}"
-        if [ -n "${GITHUB_TOKEN}" ]; then
-          SYNC_URL=$(echo "${MEMORY_REPO_URL}" | sed "s|https://|https://${GITHUB_TOKEN}@|")
+        REPO_URL="$${MEMORY_REPO_URL:-https://github.com/insublee/Insub-Bot-Memory}"
+        if [ -n "$${GITHUB_TOKEN}" ]; then
+          REPO_URL=$$(echo "$$REPO_URL" | sed "s|https://|https://$${GITHUB_TOKEN}@|")
         fi
 
         if [ ! -d "/data/Insub-Bot-Memory/.git" ]; then
           echo "Cloning memory repo..."
-          git clone "$$SYNC_URL" /data/Insub-Bot-Memory
+          git clone "$$REPO_URL" /data/Insub-Bot-Memory
         else
           echo "Syncing memory repo..."
-          cd /data/Insub-Bot-Memory && git pull "$$SYNC_URL"
+          cd /data/Insub-Bot-Memory && git pull "$$REPO_URL"
         fi
 
         # node:node (UID/GID 1000) 유저가 기본으로 존재함
