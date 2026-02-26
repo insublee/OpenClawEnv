@@ -38,6 +38,36 @@ services:
       - openclaw-data:/data
     ports:
       - "18789:18789"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:18789/health", "||", "exit", "0"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+  # ── 서버 전용: 이미지 자동 업데이트 ──
+  watchtower:
+    image: containrrr/watchtower
+    container_name: openclaw-watchtower
+    restart: unless-stopped
+    profiles: ["server"]
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_POLL_INTERVAL=86400
+      - WATCHTOWER_SCHEDULE=0 0 4 * * *
+      - TZ=Asia/Seoul
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "2"
 
 volumes:
   openclaw-data:

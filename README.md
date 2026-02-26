@@ -1,7 +1,9 @@
-# 🦞 OpenClaw + Gemini API 가이드
+# 🦞 OpenClaw + Gemini API
 
-OpenClaw AI 에이전트를 Docker 컨테이너에서 실행하고, Google **Gemini 3 Flash Preview** 모델로 구동하는 최소 구성입니다.
-텔레그램 메신저를 통해 에이전트에게 명령을 내리고 대화할 수 있습니다.
+OpenClaw AI 에이전트를 Docker 컨테이너에서 실행합니다.
+Google **Gemini 3 Flash Preview** 모델 + 텔레그램 연동.
+
+> 로컬 GPU 불필요. 인터넷만 연결되면 어디서든 실행 가능합니다.
 
 ## 🏗 아키텍처
 
@@ -15,38 +17,42 @@ OpenClaw Gateway (Docker)
 Google Gemini API (gemini-3-flash-preview)
 ```
 
-> 로컬 GPU 불필요. 인터넷만 연결되면 어디서든 실행 가능합니다.
-
 ---
 
 ## 1️⃣ 사전 준비
 
-1. **Docker** 및 **Docker Compose** 설치
-2. **Gemini API 키 발급:** [Google AI Studio](https://aistudio.google.com/apikey)에서 키를 발급받으세요.
+- **Docker** 및 **Docker Compose** 설치 (서버 모드에서는 `setup.sh`가 자동 설치)
+- **Gemini API 키:** [Google AI Studio](https://aistudio.google.com/apikey)에서 발급
 
 ---
 
-## 2️⃣ 환경 변수 설정
+## 2️⃣ 설치 및 실행
 
-`.env` 파일에 발급받은 Gemini API 키를 입력합니다:
 ```bash
+git clone https://github.com/insublee/OpenClawEnv.git
+cd OpenClawEnv
 cp .env.example .env
-# .env 파일을 열어서 GEMINI_API_KEY 값을 채워넣으세요
+nano .env  # API 키 입력
 ```
 
-```env
-GEMINI_API_KEY=여기에_발급받은_키_입력
+### WSL 환경
+
+```bash
+./setup.sh
 ```
+
+### Ubuntu 서버 환경
+
+```bash
+./setup.sh --server
+```
+
+> 서버 모드에서는 Docker 자동 설치 + Watchtower(이미지 자동 업데이트)가 포함됩니다.
 
 ---
 
-## 3️⃣ OpenClaw 실행
+## 3️⃣ 정상 구동 확인
 
-```bash
-docker compose up -d
-```
-
-정상 구동 확인:
 ```bash
 docker logs -f openclaw-gateway
 # "[gateway] listening on ws://0.0.0.0:18789" 메시지가 뜨면 성공
@@ -56,21 +62,9 @@ docker logs -f openclaw-gateway
 
 ## 4️⃣ 모델 설정 (최초 1회)
 
-컨테이너가 떠있는 상태에서 Gemini 프로바이더를 등록합니다:
-```bash
-# Google 프로바이더 등록
-docker exec openclaw-gateway openclaw config set models.providers.google \
-  '{"api":"google-genai","apiKey":"'"$GEMINI_API_KEY"'"}' --json
+`openclaw-config.json`에 미리 설정되어 자동 적용됩니다.
 
-# 기본 모델 지정
-docker exec openclaw-gateway openclaw config set agents.defaults.model.primary "google/gemini-3-flash-preview"
-docker exec openclaw-gateway openclaw config set agents.defaults.models '{"google/gemini-3-flash-preview":{}}' --json
-
-# 재시작
-docker compose restart openclaw-gateway
-```
-
-등록 확인:
+확인:
 ```bash
 docker exec openclaw-gateway openclaw models list
 ```
@@ -79,14 +73,14 @@ docker exec openclaw-gateway openclaw models list
 
 ## 5️⃣ 텔레그램 봇 연동
 
-1. 텔레그램에서 **@BotFather** → `/newbot` → 봇 생성 후 **토큰** 복사
+1. **@BotFather** → `/newbot` → 봇 생성 후 **토큰** 복사
 2. 토큰 등록:
    ```bash
    docker exec openclaw-gateway openclaw config set channels.telegram \
      '{"enabled":true,"botToken":"여기에_봇_토큰","dmPolicy":"pairing","groups":{"*":{"requireMention":true}}}' --json
    docker compose restart openclaw-gateway
    ```
-3. 봇에게 말 걸면 **Pairing Code**가 나옵니다. 아래 명령어로 승인:
+3. 봇에게 말 걸면 **Pairing Code** → 승인:
    ```bash
    docker exec openclaw-gateway openclaw pairing approve telegram 페어링코드
    ```
@@ -98,7 +92,16 @@ docker exec openclaw-gateway openclaw models list
 ```bash
 docker exec openclaw-gateway openclaw dashboard --no-open
 ```
-출력된 URL을 브라우저에 붙여넣으면 에이전트 활동을 모니터링할 수 있습니다.
+
+---
+
+## 🔄 업데이트
+
+```bash
+./update.sh
+```
+
+WSL/서버 모드를 자동으로 감지합니다.
 
 ---
 
@@ -106,9 +109,22 @@ docker exec openclaw-gateway openclaw dashboard --no-open
 
 | 명령어 | 설명 |
 |--------|------|
-| `docker compose up -d` | 실행 |
+| `docker compose up -d` | 실행 (WSL) |
+| `docker compose --profile server up -d` | 실행 (서버) |
 | `docker compose down` | 중지 |
 | `docker compose restart` | 재시작 |
 | `docker compose logs -f` | 로그 확인 |
 | `docker exec openclaw-gateway openclaw models list` | 모델 목록 |
 | `docker exec openclaw-gateway openclaw agent --agent main -m "메시지"` | CLI로 직접 대화 |
+
+---
+
+## 🛠 환경 비교
+
+| 항목 | WSL | Ubuntu 서버 |
+|------|-----|-------------|
+| 실행 명령 | `./setup.sh` | `./setup.sh --server` |
+| Docker 설치 | 수동 (Docker Desktop) | 자동 |
+| 자동 업데이트 | ❌ | ✅ (Watchtower) |
+| 로그 rotation | compose 레벨 | compose + Docker 데몬 레벨 |
+| 재부팅 자동 시작 | Docker Desktop 설정 | ✅ (`unless-stopped`) |
