@@ -17,8 +17,7 @@ services:
         cp /seed/openclaw.json /data/.openclaw/openclaw.json
 
         # 2. config.yaml 자동 생성 (최신 스키마 준수)
-        cat > /data/.openclaw/config.yaml << EOFCFG
-        {
+        echo '{
           "auth": {
             "profiles": {
               "google:default": {
@@ -47,13 +46,12 @@ services:
               "dangerouslyAllowHostHeaderOriginFallback": true
             }
           }
-        }
-        EOFCFG
+        }' > /data/.openclaw/config.yaml
 
         # 3. 메모리 레포 동기화 (Insub-Bot-Memory)
         if [ ! -d "/data/Insub-Bot-Memory/.git" ]; then
           echo "Cloning memory repo..."
-          git clone "\${MEMORY_REPO_URL}" /data/Insub-Bot-Memory
+          git clone "$MEMORY_REPO_URL" /data/Insub-Bot-Memory
         else
           echo "Syncing memory repo..."
           cd /data/Insub-Bot-Memory && git pull
