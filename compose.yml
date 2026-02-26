@@ -7,11 +7,13 @@ services:
     environment:
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
       - MEMORY_REPO_URL=${MEMORY_REPO_URL:-https://github.com/insublee/Insub-Bot-Memory}
     entrypoint:
       - sh
       - -c
       - |
+        set -x
         # 1. 설정 폴더 준비
         mkdir -p /data/.openclaw
         cp /seed/openclaw.json /data/.openclaw/openclaw.json
@@ -49,15 +51,22 @@ services:
         }' > /data/.openclaw/config.yaml
 
         # 3. 메모리 레포 동기화 (Insub-Bot-Memory)
-        if [ ! -d "/data/Insub-Bot-Memory/.git" ]; then
-          echo "Cloning memory repo..."
-          git clone "$MEMORY_REPO_URL" /data/Insub-Bot-Memory
-        else
-          echo "Syncing memory repo..."
-          cd /data/Insub-Bot-Memory && git pull
+        # 토큰이 있으면 인증된 URL 사용
+        SYNC_URL="${MEMORY_REPO_URL}"
+        if [ -n "${GITHUB_TOKEN}" ]; then
+          SYNC_URL=$(echo "${MEMORY_REPO_URL}" | sed "s|https://|https://${GITHUB_TOKEN}@|")
         fi
 
-        chown -R openclaw:openclaw /data
+        if [ ! -d "/data/Insub-Bot-Memory/.git" ]; then
+          echo "Cloning memory repo..."
+          git clone "$$SYNC_URL" /data/Insub-Bot-Memory
+        else
+          echo "Syncing memory repo..."
+          cd /data/Insub-Bot-Memory && git pull "$$SYNC_URL"
+        fi
+
+        # node:node (UID/GID 1000) 유저가 기본으로 존재함
+        chown -R 1000:1000 /data
         echo 'init done'
     volumes:
       - openclaw-data:/data
