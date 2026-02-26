@@ -10,6 +10,11 @@ services:
       - |
         mkdir -p /data/.openclaw
         cp /seed/openclaw.json /data/.openclaw/openclaw.json
+        cat > /data/.openclaw/config.yaml << 'EOF'
+        gateway:
+          controlUi:
+            dangerouslyAllowHostHeaderOriginFallback: true
+        EOF
         chown -R openclaw:openclaw /data
         echo 'init done'
     volumes:

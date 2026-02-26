@@ -1,9 +1,4 @@
 {
-    "gateway": {
-        "controlUi": {
-            "dangerouslyAllowHostHeaderOriginFallback": true
-        }
-    },
     "models": {
         "providers": {
             "google": {
