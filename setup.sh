@@ -100,7 +100,8 @@ fi
 check_env
 
 info "OpenClaw 컨테이너 빌드 및 시작 중..."
-docker compose down -v 2>/dev/null || true
+# -v 를 빼서 볼륨(설정, 메모리)이 유지되도록 함
+docker compose down 2>/dev/null || true
 docker compose up -d --build
 
 echo ""
@@ -108,3 +109,4 @@ ok "🦞 OpenClaw가 성공적으로 시작되었습니다!"
 echo ""
 info "설정 자동화 및 메모리(Insub-Bot-Memory) 동기화 완료"
 info "게이트웨이 로그 확인: docker logs -f openclaw-gateway"
+info "완전 초기화가 필요한 경우: docker compose down -v && ./setup.sh"
