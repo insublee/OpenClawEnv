@@ -8,6 +8,7 @@ services:
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - TELEGRAM_ADMIN_ID=${TELEGRAM_ADMIN_ID}
       - MEMORY_REPO_URL=${MEMORY_REPO_URL:-https://github.com/insublee/Insub-Bot-Memory}
     entrypoint:
       - sh
@@ -15,7 +16,7 @@ services:
       - |
         set -x
         # 1. 설정 폴더 준비
-        mkdir -p /data/.openclaw
+        mkdir -p /data/.openclaw/credentials
         cp /seed/openclaw.json /data/.openclaw/openclaw.json
 
         # 2. config.yaml 자동 생성 (최신 스키마 준수)
@@ -53,6 +54,12 @@ services:
             }
           }
         }' "$${TELEGRAM_BOT_TOKEN}" > /data/.openclaw/config.yaml
+
+        # 2b. 텔레그램 페어링 자동 주입 (리셋 방지)
+        if [ -n "$${TELEGRAM_ADMIN_ID}" ]; then
+          printf '{"version":1,"allowFrom":["%s"]}' "$${TELEGRAM_ADMIN_ID}" > /data/.openclaw/credentials/telegram-default-allowFrom.json
+          echo '{"version":1,"requests":[]}' > /data/.openclaw/credentials/telegram-pairing.json
+        fi
 
         # 3. 메모리 레포 동기화 (Insub-Bot-Memory)
         REPO_URL="$${MEMORY_REPO_URL:-https://github.com/insublee/Insub-Bot-Memory}"
