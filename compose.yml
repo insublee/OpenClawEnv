@@ -4,21 +4,31 @@ services:
     build: ./openclaw
     container_name: openclaw-init
     user: root
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
     entrypoint:
       - sh
       - -c
       - |
         mkdir -p /data/.openclaw
         cp /seed/openclaw.json /data/.openclaw/openclaw.json
-        cat > /data/.openclaw/config.yaml << 'EOF'
+        cat > /data/.openclaw/config.yaml << EOFCFG
         {
           "gateway": {
             "controlUi": {
               "dangerouslyAllowHostHeaderOriginFallback": true
             }
+          },
+          "channels": {
+            "telegram": {
+              "enabled": true,
+              "botToken": "${TELEGRAM_BOT_TOKEN}",
+              "dmPolicy": "pairing",
+              "groups": { "*": { "requireMention": true } }
+            }
           }
         }
-        EOF
+        EOFCFG
         chown -R openclaw:openclaw /data
         echo 'init done'
     volumes:
@@ -42,6 +52,7 @@ services:
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
       - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
     tmpfs: ["/tmp"]
     volumes:
       - openclaw-data:/data
