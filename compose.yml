@@ -20,6 +20,7 @@ services:
         cp /seed/openclaw.json /data/.openclaw/openclaw.json
 
         # 2. config.yaml 자동 생성 (최신 스키마 준수)
+        # 쉘 변수가 아닌 Compose 변수를 직접 주입 (%)
         printf '{
           "auth": {
             "profiles": {
@@ -53,26 +54,30 @@ services:
               "dangerouslyAllowHostHeaderOriginFallback": true
             }
           }
-        }' "$${TELEGRAM_BOT_TOKEN}" > /data/.openclaw/config.yaml
+        }' "${TELEGRAM_BOT_TOKEN}" > /data/.openclaw/config.yaml
 
         # 2b. 텔레그램 페어링 자동 주입 (리셋 방지)
-        if [ -n "$${TELEGRAM_ADMIN_ID}" ]; then
-          printf '{"version":1,"allowFrom":["%s"]}' "$${TELEGRAM_ADMIN_ID}" > /data/.openclaw/credentials/telegram-default-allowFrom.json
+        # Compose 변수가 비어있지 않은지 확인
+        if [ -n "${TELEGRAM_ADMIN_ID}" ] && [ "${TELEGRAM_ADMIN_ID}" != "null" ]; then
+          printf '{"version":1,"allowFrom":["%s"]}' "${TELEGRAM_ADMIN_ID}" > /data/.openclaw/credentials/telegram-default-allowFrom.json
           echo '{"version":1,"requests":[]}' > /data/.openclaw/credentials/telegram-pairing.json
+          echo "Injected Telegram Admin ID: ${TELEGRAM_ADMIN_ID}"
+        else
+          echo "Warning: TELEGRAM_ADMIN_ID is empty, skipping pairing injection."
         fi
 
         # 3. 메모리 레포 동기화 (Insub-Bot-Memory)
-        REPO_URL="$${MEMORY_REPO_URL:-https://github.com/insublee/Insub-Bot-Memory}"
-        if [ -n "$${GITHUB_TOKEN}" ]; then
-          REPO_URL=$$(echo "$$REPO_URL" | sed "s|https://|https://$${GITHUB_TOKEN}@|")
+        REPO_URL="${MEMORY_REPO_URL:-https://github.com/insublee/Insub-Bot-Memory}"
+        if [ -n "${GITHUB_TOKEN}" ]; then
+          REPO_URL=$(echo "$REPO_URL" | sed "s|https://|https://${GITHUB_TOKEN}@|")
         fi
 
         if [ ! -d "/data/Insub-Bot-Memory/.git" ]; then
           echo "Cloning memory repo..."
-          git clone "$$REPO_URL" /data/Insub-Bot-Memory
+          git clone "$REPO_URL" /data/Insub-Bot-Memory
         else
           echo "Syncing memory repo..."
-          cd /data/Insub-Bot-Memory && git pull "$$REPO_URL"
+          cd /data/Insub-Bot-Memory && git pull "$REPO_URL"
         fi
 
         # node:node (UID/GID 1000) 유저가 기본으로 존재함
