@@ -1,4 +1,9 @@
 {
+    "gateway": {
+        "controlUi": {
+            "dangerouslyAllowHostHeaderOriginFallback": true
+        }
+    },
     "models": {
         "providers": {
             "google": {
@@ -11,7 +16,7 @@
     "agents": {
         "defaults": {
             "model": {
-                "primary": "google/gemini-3-flash-preview"
+                "primary": "google/gemini-3-flash-preview   "
             },
             "models": {
                 "google/gemini-3-flash-preview": {}
