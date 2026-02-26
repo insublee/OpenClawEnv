@@ -1,22 +1,37 @@
 services:
-  # 볼륨 초기화 및 설정 복사 (최초 1회 자동 실행)
+  # 볼륨 초기화 및 설정/메모리 동기화 (최초 1회 및 재시작 시 자동 실행)
   init-permissions:
     build: ./openclaw
     container_name: openclaw-init
     user: root
     environment:
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - MEMORY_REPO_URL=${MEMORY_REPO_URL:-https://github.com/insublee/Insub-Bot-Memory}
     entrypoint:
       - sh
       - -c
       - |
+        # 1. 설정 폴더 준비
         mkdir -p /data/.openclaw
         cp /seed/openclaw.json /data/.openclaw/openclaw.json
+
+        # 2. config.yaml 자동 생성 (최신 스키마 준수)
         cat > /data/.openclaw/config.yaml << EOFCFG
         {
-          "gateway": {
-            "controlUi": {
-              "dangerouslyAllowHostHeaderOriginFallback": true
+          "auth": {
+            "profiles": {
+              "google:default": {
+                "provider": "google",
+                "mode": "api_key"
+              }
+            }
+          },
+          "agents": {
+            "defaults": {
+              "model": {
+                "primary": "google/gemini-3-flash-preview"
+              }
             }
           },
           "channels": {
@@ -26,9 +41,24 @@ services:
               "dmPolicy": "pairing",
               "groups": { "*": { "requireMention": true } }
             }
+          },
+          "gateway": {
+            "controlUi": {
+              "dangerouslyAllowHostHeaderOriginFallback": true
+            }
           }
         }
         EOFCFG
+
+        # 3. 메모리 레포 동기화 (Insub-Bot-Memory)
+        if [ ! -d "/data/Insub-Bot-Memory/.git" ]; then
+          echo "Cloning memory repo..."
+          git clone "\${MEMORY_REPO_URL}" /data/Insub-Bot-Memory
+        else
+          echo "Syncing memory repo..."
+          cd /data/Insub-Bot-Memory && git pull
+        fi
+
         chown -R openclaw:openclaw /data
         echo 'init done'
     volumes:
