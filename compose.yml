@@ -96,9 +96,11 @@ services:
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
       - GITHUB_TOKEN=${GITHUB_TOKEN}
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+    user: root
     tmpfs: ["/tmp"]
     volumes:
       - openclaw-data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - "18789:18789"
     healthcheck:
